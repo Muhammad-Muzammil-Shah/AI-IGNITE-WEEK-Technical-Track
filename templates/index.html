@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Buddy - Question Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .number-input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 80px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .analysis-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .keyword-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .questions-section {
+            margin-top: 20px;
+        }
+
+        .question-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .options {
+            margin: 15px 0;
+        }
+
+        .option {
+            padding: 10px 15px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+        }
+
+        .option.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .option.correct {
+            background: #28a745;
+            color: white;
+        }
+
+        .option.incorrect {
+            background: #dc3545;
+            color: white;
+        }
+
+        .answer-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+
+        .show-answers-btn {
+            margin: 20px 0;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .sample-notes {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .sample-notes h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 AI Study Buddy</h1>
+            <p>Transform your lecture notes into interactive quiz questions</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2>📝 Input Your Lecture Notes</h2>
+                
+                <div class="sample-notes">
+                    <h4>💡 Sample Notes Format:</h4>
+                    <p>Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines. Machine Learning is a subset of AI that enables computers to learn without being explicitly programmed. Deep Learning uses neural networks with multiple layers to process data...</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Paste your lecture notes here:</label>
+                    <textarea id="notes" rows="10" placeholder="Enter your lecture notes here. The more detailed your notes, the better questions we can generate!"></textarea>
+                </div>
+
+                <div class="controls">
+                    <div>
+                        <label for="numQuestions">Number of Questions:</label>
+                        <input type="number" id="numQuestions" class="number-input" value="5" min="1" max="10">
+                    </div>
+                    <button class="btn btn-secondary" onclick="analyzeNotes()">📊 Analyze Notes</button>
+                    <button class="btn btn-primary" onclick="generateQuestions()">🎯 Generate Questions</button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Generating your study questions...</p>
+            </div>
+
+            <div class="error" id="error" style="display: none;"></div>
+
+            <div class="results" id="results">
+                <div class="analysis-section" id="analysis" style="display: none;">
+                    <h3>📊 Notes Analysis</h3>
+                    <div id="statistics"></div>
+                    <div>
+                        <h4>🔑 Key Topics:</h4>
+                        <div class="keywords" id="keywords"></div>
+                    </div>
+                </div>
+
+                <div class="questions-section" id="questions-section" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>❓ Study Questions</h3>
+                        <button class="btn btn-secondary show-answers-btn" onclick="toggleAnswers()">Show/Hide Answers</button>
+                    </div>
+                    <div id="questions-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestions = [];
+        let showingAnswers = false;
+
+        async function analyzeNotes() {
+            const notes = document.getElementById('notes').value.trim();
+            
+            if (!notes) {
+                showError('Please enter your lecture notes first.');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch('/analyze_notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ notes: notes })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayAnalysis(data);
+                } else {
+                    showError(data.error || 'Failed to analyze notes');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function generateQuestions() {
+            const notes = document.getElementById('notes').value.trim();
+            const numQuestions = parseInt(document.getElementById('numQuestions').value);
+
+            if (!notes) {
+                showError('Please enter your lecture notes first.');
+                return;
+            }
+
+            if (notes.length < 50) {
+                showError('Please provide more detailed notes (at least 50 characters).');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch('/generate_questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        notes: notes,
+                        num_questions: numQuestions 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentQuestions = data.questions;
+                    displayQuestions(data.questions);
+                    displayKeywords(data.keywords);
+                } else {
+                    showError(data.error || 'Failed to generate questions');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayAnalysis(data) {
+            const analysisDiv = document.getElementById('analysis');
+            const statisticsDiv = document.getElementById('statistics');
+            const keywordsDiv = document.getElementById('keywords');
+
+            // Display statistics with better formatting
+            statisticsDiv.innerHTML = `
+                <p><strong>📄 Word Count:</strong> ${data.statistics.word_count}</p>
+                <p><strong>📝 Sentences:</strong> ${data.statistics.sentence_count}</p>
+                <p><strong>🔑 Key Topics Found:</strong> ${data.statistics.keyword_count} important terms</p>
+            `;
+
+            // Display keywords with better styling and categorization
+            if (data.keywords && data.keywords.length > 0) {
+                const keywordTags = data.keywords.map((keyword, index) => {
+                    // Add different colors/emojis for different types of keywords
+                    let emoji = '📌';
+                    const lowerKeyword = keyword.toLowerCase();
+                    
+                    if (['ai', 'machine', 'computer', 'data', 'algorithm', 'neural', 'deep', 'artificial'].some(tech => lowerKeyword.includes(tech))) {
+                        emoji = '🤖';
+                    } else if (['learning', 'education', 'knowledge', 'training', 'study'].some(learn => lowerKeyword.includes(learn))) {
+                        emoji = '📚';
+                    } else if (['science', 'research', 'analysis', 'theory'].some(science => lowerKeyword.includes(science))) {
+                        emoji = '🔬';
+                    }
+                    
+                    return `<span class="keyword-tag" title="Topic ${index + 1}">${emoji} ${keyword}</span>`;
+                }).join('');
+                
+                keywordsDiv.innerHTML = keywordTags;
+            } else {
+                keywordsDiv.innerHTML = '<span class="keyword-tag">⚠️ No keywords found - try more detailed notes</span>';
+            }
+
+            analysisDiv.style.display = 'block';
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function displayQuestions(questions) {
+            const container = document.getElementById('questions-container');
+            const questionsSection = document.getElementById('questions-section');
+
+            container.innerHTML = questions.map((q, index) => `
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-number">Q${q.id || index + 1}</div>
+                        <div class="question-text">${q.question}</div>
+                    </div>
+                    <div class="options">
+                        ${q.options.map((option, optIndex) => `
+                            <div class="option" onclick="selectOption(${index}, ${optIndex})" 
+                                 data-question="${index}" data-option="${optIndex}">
+                                (${String.fromCharCode(97 + optIndex)}) ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="answer-section" style="display: none;">
+                        <strong>✅ Correct Answer: (${q.answer}) ${q.options[q.answer.charCodeAt(0) - 97]}</strong>
+                    </div>
+                </div>
+            `).join('');
+
+            questionsSection.style.display = 'block';
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function displayKeywords(keywords) {
+            const keywordsDiv = document.getElementById('keywords');
+            
+            if (keywords && keywords.length > 0) {
+                const keywordTags = keywords.map((keyword, index) => {
+                    // Add emojis for different types of keywords
+                    let emoji = '📌';
+                    const lowerKeyword = keyword.toLowerCase();
+                    
+                    if (['ai', 'machine', 'computer', 'data', 'algorithm', 'neural', 'deep', 'artificial'].some(tech => lowerKeyword.includes(tech))) {
+                        emoji = '🤖';
+                    } else if (['learning', 'education', 'knowledge', 'training', 'study'].some(learn => lowerKeyword.includes(learn))) {
+                        emoji = '📚';
+                    } else if (['science', 'research', 'analysis', 'theory'].some(science => lowerKeyword.includes(science))) {
+                        emoji = '🔬';
+                    }
+                    
+                    return `<span class="keyword-tag" title="Key Topic: ${keyword}">${emoji} ${keyword}</span>`;
+                }).join('');
+                
+                keywordsDiv.innerHTML = keywordTags;
+            } else {
+                keywordsDiv.innerHTML = '<span class="keyword-tag">⚠️ No keywords extracted</span>';
+            }
+
+            document.getElementById('analysis').style.display = 'block';
+        }
+
+        function selectOption(questionIndex, optionIndex) {
+            const questionCard = document.querySelector(`[data-question="${questionIndex}"]`).closest('.question-card');
+            const options = questionCard.querySelectorAll('.option');
+            
+            // Remove previous selections
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            options[optionIndex].classList.add('selected');
+        }
+
+        function toggleAnswers() {
+            showingAnswers = !showingAnswers;
+            const answerSections = document.querySelectorAll('.answer-section');
+            
+            answerSections.forEach(section => {
+                section.style.display = showingAnswers ? 'block' : 'none';
+            });
+
+            if (showingAnswers) {
+                highlightCorrectAnswers();
+            } else {
+                clearHighlights();
+            }
+        }
+
+        function highlightCorrectAnswers() {
+            currentQuestions.forEach((q, questionIndex) => {
+                const questionCard = document.querySelectorAll('.question-card')[questionIndex];
+                const options = questionCard.querySelectorAll('.option');
+                const correctIndex = q.answer.charCodeAt(0) - 97;
+                
+                options.forEach((option, index) => {
+                    if (index === correctIndex) {
+                        option.classList.add('correct');
+                        option.classList.remove('incorrect');
+                    } else if (option.classList.contains('selected')) {
+                        option.classList.add('incorrect');
+                        option.classList.remove('correct');
+                    }
+                });
+            });
+        }
+
+        function clearHighlights() {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('correct', 'incorrect');
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Sample notes functionality
+        function loadSampleNotes() {
+            const sampleText = `Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines that can perform tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, perception, and language understanding.
+
+Machine Learning is a subset of AI that enables computers to learn and improve from experience without being explicitly programmed. It uses algorithms to parse data, learn from it, and make informed decisions or predictions.
+
+Deep Learning is a subset of machine learning that uses neural networks with multiple layers (hence "deep") to model and understand complex patterns in data. It's particularly effective for tasks like image recognition, natural language processing, and speech recognition.
+
+Natural Language Processing (NLP) is a field of AI that focuses on the interaction between computers and human language. It enables machines to read, understand, and derive meaning from human language in a valuable way.
+
+Computer Vision is an AI field that enables computers and systems to derive meaningful information from digital images, videos, and other visual inputs. It seeks to automate tasks that the human visual system can do.`;
+
+            document.getElementById('notes').value = sampleText;
+        }
+
+        // Add sample notes button
+        document.addEventListener('DOMContentLoaded', function() {
+            const controlsDiv = document.querySelector('.controls');
+            const sampleBtn = document.createElement('button');
+            sampleBtn.className = 'btn btn-secondary';
+            sampleBtn.innerHTML = '📋 Load Sample Notes';
+            sampleBtn.onclick = loadSampleNotes;
+            controlsDiv.appendChild(sampleBtn);
+        });
+    </script>
+</body>
+</html>
